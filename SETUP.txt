@@ -1,0 +1,54 @@
+VISTA STOCK MANAGEMENT — GITHUB PAGES SETUP
+
+The Vista project is a static website for GitHub Pages. It uses these files together:
+- index.html
+- app.js
+- vista-mark.svg
+
+The app uses a Supabase database for shared records. GitHub Pages hosts the interface; it does not provide the database.
+
+DATABASE SETUP
+1. Create a free Supabase project.
+2. In Supabase, open SQL Editor and run this SQL:
+
+create table if not exists public.vista_records (
+  key text primary key,
+  value jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.vista_records enable row level security;
+drop policy if exists "Public access for Vista" on public.vista_records;
+create policy "Public access for Vista" on public.vista_records
+  for all to anon using (true) with check (true);
+grant select, insert, update, delete on public.vista_records to anon;
+insert into public.vista_records (key, value) values
+  ('products', '[]'), ('customers', '[]'), ('suppliers', '[]'),
+  ('deliveries', '[]'), ('purchases', '[]'), ('bills', '[]'),
+  ('batches', '[]'), ('bankAccounts', '[]'), ('ledgers', '[]'), ('ledgerEntries', '[]'), ('activity', '[]')
+on conflict (key) do nothing;
+
+3. Copy the Supabase Project URL and the anon/public key from Project Settings → API. Never put a service_role or secret key in the website.
+
+GITHUB PAGES
+1. Sign into GitHub yourself and create a separate public repository for Vista. This keeps the existing main website repository untouched.
+2. Upload index.html, app.js, and vista-mark.svg to the repository root.
+3. Open repository Settings → Pages. Choose Deploy from a branch, select main and /(root), then Save.
+4. GitHub will show the public Pages address after it deploys.
+5. Open that address, select Setup & data, enter the Supabase Project URL and anon/public key, and connect. Share the Pages address with your team.
+
+VISTA FEATURES
+- Product MRP, purchase rate, standard selling rate, GST bracket, HSN code, and customer-specific rates.
+- Batch numbers and expiry dates, with purchases and bills tied to batch stock.
+- Customer billing with GST calculation and optional invoice discount. Use Print / PDF to print on A4 or choose Save as PDF in the browser print dialog.
+- Supplier and purchase records, incoming stock, deliveries, named ledgers, bank vouchers, bank transfers, and book balances.
+- Download and import a JSON backup from Setup & data.
+
+PUBLIC ACCESS AND DATA
+GitHub Pages is public. This no-login setup also gives every internet visitor read/write/delete access to the Supabase records. That includes customer contacts, invoice records, purchase history, ledger entries, and bank balances. Anyone can change or erase them. Do not use this configuration for real sensitive or financial records unless you accept that exposure. Keep backups.
+
+GST INVOICE DETAILS
+The print view calculates GST and shows optional customer GSTIN and product HSN. The company GSTIN was not provided, so the bill is labelled “Invoice,” not “Tax Invoice.” Confirm required invoice particulars with your accountant before using the PDF as a GST tax invoice.
+
+
+FREE-TIER AVAILABILITY
+GitHub Pages can host the static website without a hosting fee. Supabase Free projects may pause after a week with too little database activity, so it is not guaranteed to be maintenance-free. A paused project must be resumed from the Supabase dashboard. Check current limits before relying on the service for daily office operations.
